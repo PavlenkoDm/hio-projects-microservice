@@ -1,9 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { QueueNames } from './queue/constants/queue.constants';
 import { ValidationPipe } from '@nestjs/common';
+
+import { AppModule } from './app.module';
+import { QueueNames } from './queue/constants/queue.constants';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,16 +12,7 @@ async function bootstrap() {
   const configService = app.get<ConfigService>(ConfigService);
 
   app.enableCors();
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.RMQ,
-    options: {
-      urls: [configService.get<string>('RABBITMQ_CONNECTION_URL')],
-      queue: QueueNames.AUTH,
-      queueOptions: {
-        durable: true,
-      },
-    },
-  });
+
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
@@ -31,6 +23,7 @@ async function bootstrap() {
       },
     },
   });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

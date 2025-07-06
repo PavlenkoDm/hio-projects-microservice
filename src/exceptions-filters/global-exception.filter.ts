@@ -23,7 +23,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     let message =
       exception instanceof HttpException
         ? exception.message
-        : 'Internal HIO api-gateway server error (from Global Exception Filter)';
+        : 'Internal HIO projects-microcervice server error (from Global Exception Filter)';
 
     if (Array.isArray(exception?.response?.message)) {
       message =
@@ -36,7 +36,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       path,
       timestamp: new Date().toISOString(),
       method: request.method,
-      body: this.anonimyzeReqBody(request.body),
+      body: request.body,
       query: request.query,
       params: request.params,
       stack: exception.stack,
