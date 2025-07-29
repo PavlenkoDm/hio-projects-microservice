@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProjectsService } from './projects.service';
 import { ProjectsController } from './projects.controller';
 
-import { Participant } from './entities/participant.entitiy';
+import { Participant } from './entities/participant.entity';
 import { Project } from './entities/project.entity';
 
 @Module({
