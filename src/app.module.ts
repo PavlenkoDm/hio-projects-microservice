@@ -17,11 +17,11 @@ import { RpcValidationFilter } from './exceptions-filters/rpc-validation.filter'
       ): Promise<TypeOrmModuleOptions> => ({
         type: 'postgres',
         //url: configService.get<string>('PG_DATABASE_CONNECTION_URL'),
-        host: configService.get<string>('PG_DATABASE_HOST'), // Адрес сервера базы
-        port: configService.get<number>('PG_DATABASE_PORT'), // Порт
-        username: configService.get<string>('PG_DATABASE_USERNAME'), // Имя пользователя
-        password: configService.get<string>('PG_DATABASE_PASSWORD'), // Пароль
-        database: configService.get<string>('PG_DATABASE_NAME'), // Имя базы данных
+        host: configService.get<string>('PG_DATABASE_HOST'),
+        port: configService.get<number>('PG_DATABASE_PORT'),
+        username: configService.get<string>('PG_DATABASE_USERNAME'),
+        password: configService.get<string>('PG_DATABASE_PASSWORD'),
+        database: configService.get<string>('PG_DATABASE_NAME'),
         autoLoadEntities: true,
         synchronize: true,
         extra: { ssl: { rejectUnauthorized: false } },
