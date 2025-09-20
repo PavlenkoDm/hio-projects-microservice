@@ -20,4 +20,11 @@ export class ProjectsController {
 
     return await this.projectsService.deleteProjectById(id);
   }
+
+  @MessagePattern({ cmd: ProjectsQueueEvents.GET_PROJECT_BY_ID })
+  async getById(@Payload() projectId: { id: number }) {
+    const { id } = projectId;
+
+    return await this.projectsService.getProjectById(id);
+  }
 }

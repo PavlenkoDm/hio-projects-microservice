@@ -108,7 +108,7 @@ export class ProjectsService {
         if (!projectToDelete) {
           throw createRpcException(
             HttpStatus.NOT_FOUND,
-            `Project with id: ${id} not found`,
+            `project with id: ${id} not found`,
           );
         }
 
@@ -121,6 +121,30 @@ export class ProjectsService {
         throw createRpcException(
           HttpStatus.BAD_REQUEST,
           `Delete project ERROR: ${error.message}`,
+        );
+      }
+    });
+  }
+
+  async getProjectById(id: number): Promise<ProjectResponseDto> {
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        const project = await this.getProjectWithRelations(id, manager);
+
+        if (!project) {
+          throw createRpcException(
+            HttpStatus.NOT_FOUND,
+            `project with id ${id} not found`,
+          );
+        }
+
+        const projectResponse = this.formatProjectResponse(project);
+
+        return projectResponse;
+      } catch (error) {
+        throw createRpcException(
+          HttpStatus.BAD_REQUEST,
+          `Get project ERROR: ${error.message}`,
         );
       }
     });
