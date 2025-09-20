@@ -19,6 +19,7 @@ export enum AuthQueueEvents {
 
 export enum ProjectsQueueEvents {
   CREATE_PROJECT = 'create_project',
+  DELETE_PROJECT_BY_ID = 'delete_project_by_id',
 }
 
 export enum QueueErrors {

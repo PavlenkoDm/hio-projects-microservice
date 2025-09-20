@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 
 import { ProjectMember } from './project-member.entity';
@@ -34,15 +35,13 @@ export class Project {
   @Column({ type: 'text', nullable: false })
   description: string;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: DomainType,
     nullable: false,
   })
   domain: DomainType;
-
-  @Column({ type: 'varchar', length: 100, nullable: false })
-  domainSlug: string;
 
   @Column({
     type: 'enum',
@@ -61,14 +60,14 @@ export class Project {
   @Column({ type: 'text', nullable: true })
   goals?: string;
 
-  // JSON поле для teamSize: { "frontend developer": 2, "QA engineer": 1 }
+  // JSON field for teamSize: { "frontend developer": 2, "QA engineer": 1 }
   @Column({
     type: 'jsonb',
     nullable: true,
   })
   teamSize?: Record<string, number>;
 
-  // Поля для статуса ACTIVE (заполняются позже)
+  // Fields for ACTIVE status (filling later)
   @Column({
     type: 'enum',
     enum: ComplexityType,
@@ -85,7 +84,7 @@ export class Project {
   })
   tasks?: Task[];
 
-  // Даты проекта
+  // project dates
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 

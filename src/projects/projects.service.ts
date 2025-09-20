@@ -80,14 +80,17 @@ export class ProjectsService {
     const project = manager.create(Project, {
       name: basics.name,
       description: basics.description,
-      goals: basics.goals || null,
+      goals: basics.goals && basics.goals.trim() !== '' ? basics.goals : null,
       domain: basics.domain,
-      domainSlug: basics.domainSlug,
       type: basics.type,
-      tasks: basics.tasks || null,
+      tasks: basics.tasks && basics.tasks.length !== 0 ? basics.tasks : null,
 
-      complexity: publish.complexity || null,
-      duration: publish.duration || null,
+      complexity:
+        publish.complexity && publish.complexity.trim() !== ''
+          ? publish.complexity
+          : null,
+      duration:
+        publish.duration && publish.duration !== 0 ? publish.duration : null,
 
       projectStatus: ProjectStatus.CREATED,
 
@@ -96,6 +99,34 @@ export class ProjectsService {
 
     return await manager.save(Project, project);
   }
+
+  async deleteProjectById(id: number): Promise<ProjectResponseDto> {
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        const projectToDelete = await this.getProjectWithRelations(id, manager);
+
+        if (!projectToDelete) {
+          throw createRpcException(
+            HttpStatus.NOT_FOUND,
+            `Project with id: ${id} not found`,
+          );
+        }
+
+        const projectResponse = this.formatProjectResponse(projectToDelete);
+
+        await manager.delete(Project, { id });
+
+        return projectResponse;
+      } catch (error) {
+        throw createRpcException(
+          HttpStatus.BAD_REQUEST,
+          `Delete project ERROR: ${error.message}`,
+        );
+      }
+    });
+  }
+
+  //==========================================================================
 
   private async createProjectLanguages(
     projectId: number,
@@ -165,17 +196,19 @@ export class ProjectsService {
   }
 
   private formatProjectResponse(project: Project): ProjectResponseDto {
+    const { complexity, duration } = project;
+    const publish = !complexity || !duration ? {} : { complexity, duration };
+
     return {
       basics: {
         id: project.id,
         name: project.name,
         description: project.description,
-        goals: project.goals || null,
+        goals: !project.goals ? '' : project.goals,
         domain: project.domain,
-        domainSlug: project.domainSlug,
-        stack: project.stack?.map((s) => s.stackItem) || null,
+        stack: !project.stack ? [] : project.stack.map((s) => s.stackItem),
         type: project.type,
-        tasks: project.tasks || null,
+        tasks: !project.tasks ? [] : project.tasks,
       },
       team: {
         language:
@@ -194,10 +227,7 @@ export class ProjectsService {
             directions: member.directions,
           })) || [],
       },
-      publish: {
-        complexity: project.complexity || null,
-        duration: project.duration || null,
-      },
+      publish,
       projectStatus: project.projectStatus,
       createdAt: project.createdAt.toISOString(),
       startDate: project.startDate?.toISOString() || null,

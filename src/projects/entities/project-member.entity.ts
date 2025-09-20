@@ -6,6 +6,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
 import { Project } from './project.entity';
@@ -19,6 +20,7 @@ export class ProjectMember {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: number;
 
+  @Index()
   @Column({ type: 'bigint', name: 'project_id' })
   projectId: number;
   @ManyToOne(() => Project, (project) => project.members, {

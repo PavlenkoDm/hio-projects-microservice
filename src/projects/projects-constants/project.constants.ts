@@ -61,4 +61,5 @@ export enum ComplexityType {
   MEDIUM = 'medium',
   HIGH = 'high',
   VERY_DIFFICULT = 'very difficult',
+  EMPTY = '',
 }

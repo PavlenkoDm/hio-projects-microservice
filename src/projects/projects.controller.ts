@@ -13,4 +13,11 @@ export class ProjectsController {
   async create(@Payload() createProjectDto: CreateProjectDto) {
     return await this.projectsService.createProject(createProjectDto);
   }
+
+  @MessagePattern({ cmd: ProjectsQueueEvents.DELETE_PROJECT_BY_ID })
+  async deleteById(@Payload() projectId: { id: number }) {
+    const { id } = projectId;
+
+    return await this.projectsService.deleteProjectById(id);
+  }
 }

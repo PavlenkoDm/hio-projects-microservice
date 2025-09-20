@@ -6,6 +6,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   Unique,
+  Index,
 } from 'typeorm';
 
 import { Project } from './project.entity';
@@ -16,13 +17,14 @@ export class ProjectStack {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: number;
 
+  @Index()
   @Column({ type: 'bigint', name: 'project_id' })
   projectId: number;
   @ManyToOne(() => Project, (project) => project.stack, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'project_id' })
-  project: Project; //Можем получить объект project
+  project: Project;
 
   @Column({ type: 'varchar', length: 100, nullable: false })
   stackItem: string;

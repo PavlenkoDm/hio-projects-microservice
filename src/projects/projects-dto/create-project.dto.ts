@@ -64,9 +64,8 @@ export class TeamMemberDto {
   @IsString()
   avatarUrl?: string;
 
-  @IsOptional()
   @IsBoolean()
-  mentorship?: boolean = false;
+  mentorship: boolean = false;
 
   @IsEnum(TeamRole)
   role: TeamRole;
@@ -90,31 +89,24 @@ export class BasicsDto {
   @MaxLength(1000)
   description: string;
 
-  @IsOptional()
   @IsString()
-  @MaxLength(500)
-  goals?: string;
+  @MaxLength(1000)
+  goals: string;
 
   @IsEnum(DomainType)
   domain: DomainType;
 
-  @IsString()
-  @IsNotEmpty()
-  domainSlug: string;
-
-  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  stack?: string[];
+  stack: string[];
 
   @IsEnum(ProjectType)
   type: ProjectType;
 
-  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => TaskDto)
-  tasks?: TaskDto[];
+  tasks: TaskDto[];
 }
 
 // team section
@@ -127,23 +119,20 @@ export class TeamDto {
   @IsObject()
   teamSize: Record<string, number>;
 
-  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => TeamMemberDto)
-  members?: TeamMemberDto[];
+  members: TeamMemberDto[];
 }
 
 // publish section
 export class PublishDto {
-  @IsOptional()
   @IsEnum(ComplexityType)
-  complexity?: ComplexityType;
+  complexity: ComplexityType;
 
-  @IsOptional()
   @IsInt()
-  @Min(1)
-  @Max(48) // максимум 4 года
+  @Min(0)
+  @Max(24)
   duration?: number;
 }
 
@@ -162,6 +151,8 @@ export class CreateProjectDto {
   publish: PublishDto;
 }
 
+//==============================================================================
+
 //Response
 export class BasicsResponseDto {
   @IsInt()
@@ -176,41 +167,36 @@ export class BasicsResponseDto {
   @IsNotEmpty()
   description: string;
 
-  @IsOptional()
+  @MinLength(0)
   @IsString()
-  goals?: string | null;
+  goals: string;
 
   @IsEnum(DomainType)
   domain: DomainType;
 
-  @IsString()
-  @IsNotEmpty()
-  domainSlug: string;
-
-  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  stack?: string[] | null;
+  stack: string[];
 
   @IsEnum(ProjectType)
   type: ProjectType;
 
-  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => TaskDto)
-  tasks?: TaskDto[] | null;
+  tasks: TaskDto[];
 }
 
 export class PublishResponseDto {
   @IsOptional()
   @IsEnum(ComplexityType)
-  complexity?: ComplexityType | null;
+  complexity?: ComplexityType;
 
   @IsOptional()
   @IsInt()
   @Min(1)
-  duration?: number | null;
+  @Max(24)
+  duration?: number;
 }
 
 export class ProjectResponseDto {
