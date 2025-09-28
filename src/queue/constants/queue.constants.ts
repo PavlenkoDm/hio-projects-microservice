@@ -21,6 +21,7 @@ export enum ProjectsQueueEvents {
   CREATE_PROJECT = 'create_project',
   DELETE_PROJECT_BY_ID = 'delete_project_by_id',
   GET_PROJECT_BY_ID = 'get_project_by_id',
+  START_PROJECT = 'start_project',
 }
 
 export enum QueueErrors {

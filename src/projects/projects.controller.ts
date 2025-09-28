@@ -4,6 +4,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { ProjectsService } from './projects.service';
 import { ProjectsQueueEvents } from '../queue/constants/queue.constants';
 import { CreateProjectDto } from './projects-dto/create-project.dto';
+import { StartProjectDto } from './projects-dto/start-project.dto';
 
 @Controller('projects')
 export class ProjectsController {
@@ -26,5 +27,14 @@ export class ProjectsController {
     const { id } = projectId;
 
     return await this.projectsService.getProjectById(id);
+  }
+
+  @MessagePattern({ cmd: ProjectsQueueEvents.START_PROJECT })
+  async start(
+    @Payload() startPayload: { id: number; startProjectDto: StartProjectDto },
+  ) {
+    const { id, startProjectDto } = startPayload;
+
+    return await this.projectsService.startProject(id, startProjectDto);
   }
 }

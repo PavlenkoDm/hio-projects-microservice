@@ -14,6 +14,11 @@ import { ProjectLanguage } from './entities/project-language.entity';
 import { ProjectStack } from './entities/project-stack.entity';
 import { ProjectStatus } from './projects-constants/project.constants';
 import { createRpcException } from '../utils/create-rpcexception.utils';
+import {
+  StartProjectDto,
+  StartProjectResponseDto,
+} from './projects-dto/start-project.dto';
+import { addMonths } from '../utils/add-month.utils';
 
 @Injectable()
 export class ProjectsService {
@@ -150,6 +155,82 @@ export class ProjectsService {
     });
   }
 
+  async startProject(
+    id: number,
+    startProjectDto: StartProjectDto,
+  ): Promise<StartProjectResponseDto> {
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        const project = await this.getProjectWithRelations(id, manager);
+        if (!project) {
+          throw createRpcException(
+            HttpStatus.NOT_FOUND,
+            `project with id ${id} not found`,
+          );
+        }
+
+        const startDate = new Date();
+        let deadline: Date | null = null;
+        if (
+          startProjectDto.publish.duration &&
+          startProjectDto.publish.duration > 0
+        ) {
+          deadline = addMonths(startDate, startProjectDto.publish.duration);
+        }
+
+        project.name = startProjectDto.basics.name;
+        project.description = startProjectDto.basics.description;
+        project.goals = startProjectDto.basics.goals || null;
+        project.domain = startProjectDto.basics.domain;
+        project.type = startProjectDto.basics.type;
+        project.tasks = startProjectDto.basics.tasks?.length
+          ? startProjectDto.basics.tasks
+          : null;
+
+        project.complexity = startProjectDto.publish.complexity || null;
+        project.duration = startProjectDto.publish.duration || null;
+
+        project.projectStatus = ProjectStatus.ACTIVE;
+        project.startDate = startDate;
+        project.deadline = deadline;
+        project.teamSize = startProjectDto.team.teamSize;
+
+        await manager.save(Project, project);
+
+        await manager.delete(ProjectStack, { projectId: project.id });
+        await manager.delete(ProjectLanguage, { projectId: project.id });
+        await manager.delete(ProjectMember, { projectId: project.id });
+
+        await this.createProjectStack(
+          project.id,
+          startProjectDto.basics.stack,
+          manager,
+        );
+        await this.createProjectLanguages(
+          project.id,
+          startProjectDto.team.language,
+          manager,
+        );
+        await this.createProjectMembers(
+          project.id,
+          startProjectDto.team.members,
+          manager,
+        );
+
+        const updatedProject = await this.getProjectWithRelations(
+          project.id,
+          manager,
+        );
+        return this.formatStartProjectResponse(updatedProject);
+      } catch (error) {
+        throw createRpcException(
+          HttpStatus.BAD_REQUEST,
+          `Start project ERROR: ${error.message}`,
+        );
+      }
+    });
+  }
+
   //==========================================================================
 
   private async createProjectLanguages(
@@ -250,6 +331,47 @@ export class ProjectsService {
             role: member.role,
             directions: member.directions,
           })) || [],
+      },
+      publish,
+      projectStatus: project.projectStatus,
+      createdAt: project.createdAt.toISOString(),
+      startDate: project.startDate?.toISOString() || null,
+      deadline: project.deadline?.toISOString() || null,
+      frozenDate: project.frozenDate?.toISOString() || null,
+    };
+  }
+
+  private formatStartProjectResponse(
+    project: Project,
+  ): StartProjectResponseDto {
+    const { complexity, duration } = project;
+    const publish = { complexity, duration };
+
+    return {
+      basics: {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        goals: project.goals,
+        domain: project.domain,
+        stack: project.stack.map((s) => s.stackItem),
+        type: project.type,
+        tasks: project.tasks,
+      },
+      team: {
+        language: project.languages.map((lang) => ({
+          code: lang.languageCode,
+          label: lang.languageLabel,
+        })),
+        teamSize: project.teamSize,
+        members: project.members.map((member) => ({
+          userId: member.userId,
+          name: member.name,
+          avatarUrl: member.avatarUrl,
+          mentorship: member.mentorship,
+          role: member.role,
+          directions: member.directions,
+        })),
       },
       publish,
       projectStatus: project.projectStatus,
