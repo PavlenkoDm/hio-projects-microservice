@@ -23,6 +23,7 @@ import {
   ProjectStatus,
   ProjectType,
   TeamRole,
+  UserStatus,
   WorkDirection,
 } from '../projects-constants/project.constants';
 
@@ -74,6 +75,9 @@ export class StartTeamMemberDto {
   @IsArray()
   @IsEnum(WorkDirection, { each: true })
   directions: WorkDirection[];
+
+  @IsEnum(UserStatus)
+  status: UserStatus;
 }
 
 // basics section

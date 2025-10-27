@@ -18,14 +18,12 @@ export class ProjectsController {
   @MessagePattern({ cmd: ProjectsQueueEvents.DELETE_PROJECT_BY_ID })
   async deleteById(@Payload() projectId: { id: number }) {
     const { id } = projectId;
-
     return await this.projectsService.deleteProjectById(id);
   }
 
   @MessagePattern({ cmd: ProjectsQueueEvents.GET_PROJECT_BY_ID })
   async getById(@Payload() projectId: { id: number }) {
     const { id } = projectId;
-
     return await this.projectsService.getProjectById(id);
   }
 
@@ -34,7 +32,6 @@ export class ProjectsController {
     @Payload() startPayload: { id: number; startProjectDto: StartProjectDto },
   ) {
     const { id, startProjectDto } = startPayload;
-
     return await this.projectsService.startProject(id, startProjectDto);
   }
 }

@@ -231,6 +231,62 @@ export class ProjectsService {
     });
   }
 
+  async updateProjectMembers(
+    projectId: number,
+    membersFromFrontend: TeamMemberDto[],
+  ): Promise<ProjectMember[]> {
+    try {
+      const existingMembers = await this.projectMemberRepo.find({
+        where: { projectId },
+      });
+
+      const existingMembersMap = new Map(
+        existingMembers.map((m: ProjectMember) => [m.userId, m]),
+      );
+
+      const toCreate: Partial<ProjectMember>[] = [];
+      const toUpdate: ProjectMember[] = [];
+
+      for (const frontendMember of membersFromFrontend) {
+        const existing = existingMembersMap.get(frontendMember.userId);
+
+        if (!existing) {
+          toCreate.push({
+            projectId,
+            ...frontendMember,
+          });
+        } else if (this.hasChangesInMembers(existing, frontendMember)) {
+          Object.assign(existing, frontendMember);
+          toUpdate.push(existing);
+        }
+      }
+
+      return await this.dataSource.transaction(async (manager) => {
+        if (toCreate.length > 0) {
+          await manager
+            .createQueryBuilder()
+            .insert()
+            .into(ProjectMember)
+            .values(toCreate)
+            .execute();
+        }
+
+        if (toUpdate.length > 0) {
+          await manager.save(ProjectMember, toUpdate);
+        }
+
+        return await manager.find(ProjectMember, {
+          where: { projectId },
+        });
+      });
+    } catch (error) {
+      throw createRpcException(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        `Update project members ERROR: ${error.message}`,
+      );
+    }
+  }
+
   //==========================================================================
 
   private async createProjectLanguages(
@@ -284,6 +340,7 @@ export class ProjectsService {
         mentorship: member.mentorship || false,
         role: member.role,
         directions: member.directions,
+        status: member.status,
       }),
     );
 
@@ -330,6 +387,7 @@ export class ProjectsService {
             mentorship: member.mentorship,
             role: member.role,
             directions: member.directions,
+            status: member.status,
           })) || [],
       },
       publish,
@@ -371,6 +429,7 @@ export class ProjectsService {
           mentorship: member.mentorship,
           role: member.role,
           directions: member.directions,
+          status: member.status,
         })),
       },
       publish,
@@ -380,5 +439,19 @@ export class ProjectsService {
       deadline: project.deadline?.toISOString() || null,
       frozenDate: project.frozenDate?.toISOString() || null,
     };
+  }
+
+  private hasChangesInMembers(
+    existing: ProjectMember,
+    updated: TeamMemberDto,
+  ): boolean {
+    return (
+      existing.name !== updated.name ||
+      existing.avatarUrl !== updated.avatarUrl ||
+      existing.mentorship !== updated.mentorship ||
+      existing.role !== updated.role ||
+      existing.status !== updated.status ||
+      JSON.stringify(existing.directions) !== JSON.stringify(updated.directions)
+    );
   }
 }

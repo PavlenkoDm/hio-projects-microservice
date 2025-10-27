@@ -12,6 +12,7 @@ import {
 import { Project } from './project.entity';
 import {
   TeamRole,
+  UserStatus,
   WorkDirection,
 } from '../projects-constants/project.constants';
 
@@ -45,6 +46,7 @@ export class ProjectMember {
     type: 'enum',
     enum: TeamRole,
     nullable: false,
+    default: TeamRole.USER,
   })
   role: TeamRole;
 
@@ -53,6 +55,13 @@ export class ProjectMember {
     nullable: false,
   })
   directions: WorkDirection[];
+
+  @Column({
+    type: 'enum',
+    enum: UserStatus,
+    nullable: false,
+  })
+  status: UserStatus;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

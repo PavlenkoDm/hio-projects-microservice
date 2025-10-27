@@ -26,8 +26,8 @@ export enum ProjectType {
 export enum TeamRole {
   OWNER = 'owner',
   TEAM_LEADER = 'team leader',
-  MODERATOR = 'moderator',
-  MEMBER = 'user',
+  PM = 'PM',
+  USER = 'user',
 }
 
 export enum WorkDirection {
@@ -62,4 +62,11 @@ export enum ComplexityType {
   HIGH = 'high',
   VERY_DIFFICULT = 'very difficult',
   EMPTY = '',
+}
+
+export enum UserStatus {
+  PENDING = 'pending',
+  ACTIVE = 'active',
+  FROZEN = 'frozen',
+  DELETED = 'deleted',
 }
