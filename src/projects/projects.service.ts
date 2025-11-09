@@ -198,7 +198,9 @@ export class ProjectsService {
         await manager.save(Project, project);
 
         await manager.delete(ProjectStack, { projectId: project.id });
-        await manager.delete(ProjectLanguage, { projectId: project.id });
+        await manager.delete(ProjectLanguage, {
+          projectId: project.id,
+        });
         await manager.delete(ProjectMember, { projectId: project.id });
 
         await this.createProjectStack(

@@ -3,7 +3,10 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 
 import { ProjectsService } from './projects.service';
 import { ProjectsQueueEvents } from '../queue/constants/queue.constants';
-import { CreateProjectDto } from './projects-dto/create-project.dto';
+import {
+  CreateProjectDto,
+  TeamMemberDto,
+} from './projects-dto/create-project.dto';
 import { StartProjectDto } from './projects-dto/start-project.dto';
 
 @Controller('projects')
@@ -29,9 +32,28 @@ export class ProjectsController {
 
   @MessagePattern({ cmd: ProjectsQueueEvents.START_PROJECT })
   async start(
-    @Payload() startPayload: { id: number; startProjectDto: StartProjectDto },
+    @Payload()
+    startPayload: {
+      id: number;
+      startProjectDto: StartProjectDto;
+    },
   ) {
     const { id, startProjectDto } = startPayload;
     return await this.projectsService.startProject(id, startProjectDto);
+  }
+
+  @MessagePattern({ cmd: ProjectsQueueEvents.UPDATE_PROJECT_MEMBERS })
+  async updateProjectTeamMembers(
+    @Payload()
+    updateMembersPayload: {
+      projectId: number;
+      teamMembers: TeamMemberDto[];
+    },
+  ) {
+    const { projectId, teamMembers } = updateMembersPayload;
+    return await this.projectsService.updateProjectMembers(
+      projectId,
+      teamMembers,
+    );
   }
 }
