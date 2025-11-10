@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
 
 import { Project } from './entities/project.entity';
 import {
@@ -19,6 +19,7 @@ import {
   StartProjectResponseDto,
 } from './projects-dto/start-project.dto';
 import { addMonths } from '../utils/add-month.utils';
+import { UpdateProjectDto } from './projects-dto/update-project.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -113,7 +114,7 @@ export class ProjectsService {
         if (!projectToDelete) {
           throw createRpcException(
             HttpStatus.NOT_FOUND,
-            `project with id: ${id} not found`,
+            `Project with id: ${id} not found`,
           );
         }
 
@@ -139,7 +140,7 @@ export class ProjectsService {
         if (!project) {
           throw createRpcException(
             HttpStatus.NOT_FOUND,
-            `project with id ${id} not found`,
+            `Project with id ${id} not found`,
           );
         }
 
@@ -165,7 +166,7 @@ export class ProjectsService {
         if (!project) {
           throw createRpcException(
             HttpStatus.NOT_FOUND,
-            `project with id ${id} not found`,
+            `Project with id ${id} not found`,
           );
         }
 
@@ -287,6 +288,92 @@ export class ProjectsService {
         `Update project members ERROR: ${error.message}`,
       );
     }
+  }
+
+  async updateProject(
+    id: number,
+    updateProjectDto: UpdateProjectDto,
+  ): Promise<ProjectResponseDto> {
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        const project = await this.getProjectWithRelations(id, manager);
+
+        if (!project) {
+          throw createRpcException(
+            HttpStatus.NOT_FOUND,
+            `Project with id: ${id} not found`,
+          );
+        }
+
+        // Update BASICS section
+        if (updateProjectDto.basics) {
+          const { stack, tasks, name, description, goals, domain, type } =
+            updateProjectDto.basics;
+
+          if (name !== undefined) project.name = name;
+          if (description !== undefined) project.description = description;
+          if (goals !== undefined) {
+            project.goals = goals && goals.trim() !== '' ? goals : null;
+          }
+          if (domain !== undefined) project.domain = domain;
+          if (type !== undefined) project.type = type;
+
+          if (stack !== undefined) {
+            await this.updateProjectStack(project.id, stack, manager);
+          }
+
+          if (tasks !== undefined) {
+            project.tasks = tasks && tasks.length > 0 ? tasks : null;
+          }
+        }
+
+        // Update TEAM section
+        if (updateProjectDto.team) {
+          const { language, teamSize } = updateProjectDto.team;
+
+          if (language !== undefined) {
+            await this.updateProjectLanguages(project.id, language, manager);
+          }
+
+          // Update TEAM SIZE (JSONB - full replace)
+          if (teamSize !== undefined) {
+            project.teamSize = teamSize;
+          }
+        }
+
+        // Update PUBLISH section
+        if (updateProjectDto.publish) {
+          if (updateProjectDto.publish.complexity !== undefined) {
+            project.complexity =
+              updateProjectDto.publish.complexity &&
+              updateProjectDto.publish.complexity.trim() !== ''
+                ? updateProjectDto.publish.complexity
+                : null;
+          }
+          if (updateProjectDto.publish.duration !== undefined) {
+            project.duration =
+              updateProjectDto.publish.duration &&
+              updateProjectDto.publish.duration !== 0
+                ? updateProjectDto.publish.duration
+                : null;
+          }
+        }
+
+        await manager.save(Project, project);
+
+        const updatedProject = await this.getProjectWithRelations(
+          project.id,
+          manager,
+        );
+
+        return this.formatProjectResponse(updatedProject);
+      } catch (error) {
+        throw createRpcException(
+          HttpStatus.BAD_REQUEST,
+          `Update project ERROR: ${error.message}`,
+        );
+      }
+    });
   }
 
   //==========================================================================
@@ -455,5 +542,70 @@ export class ProjectsService {
       existing.status !== updated.status ||
       JSON.stringify(existing.directions) !== JSON.stringify(updated.directions)
     );
+  }
+
+  private async updateProjectStack(
+    projectId: number,
+    newStack: string[],
+    manager: EntityManager,
+  ): Promise<void> {
+    const currentStack = await manager.find(ProjectStack, {
+      where: { projectId },
+    });
+
+    const currentStackItems = currentStack.map((s) => s.stackItem);
+
+    const newStackSet = new Set(newStack);
+    const currentStackSet = new Set(currentStackItems);
+
+    const itemsToDelete = currentStackItems.filter(
+      (item) => !newStackSet.has(item),
+    );
+
+    const itemsToAdd = newStack.filter((item) => !currentStackSet.has(item));
+
+    if (itemsToDelete.length > 0) {
+      await manager.delete(ProjectStack, {
+        projectId,
+        stackItem: In(itemsToDelete),
+      });
+    }
+
+    if (itemsToAdd.length > 0) {
+      await this.createProjectStack(projectId, itemsToAdd, manager);
+    }
+  }
+
+  private async updateProjectLanguages(
+    projectId: number,
+    newLanguages: LanguageDto[],
+    manager: EntityManager,
+  ): Promise<void> {
+    const currentLanguages = await manager.find(ProjectLanguage, {
+      where: { projectId },
+    });
+
+    const currentCodes = currentLanguages.map((l) => l.languageCode);
+    const newCodes = newLanguages.map((l) => l.code);
+
+    const currentCodesSet = new Set(currentCodes);
+    const newCodesSet = new Set(newCodes);
+
+    const codesToDelete = currentCodes.filter((code) => !newCodesSet.has(code));
+
+    const languagesToAdd = newLanguages.filter(
+      (lang) => !currentCodesSet.has(lang.code),
+    );
+
+    if (codesToDelete.length > 0) {
+      await manager.delete(ProjectLanguage, {
+        projectId,
+        languageCode: In(codesToDelete),
+      });
+    }
+
+    if (languagesToAdd.length > 0) {
+      await this.createProjectLanguages(projectId, languagesToAdd, manager);
+    }
   }
 }

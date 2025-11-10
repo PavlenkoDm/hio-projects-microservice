@@ -23,6 +23,7 @@ export enum ProjectsQueueEvents {
   GET_PROJECT_BY_ID = 'get_project_by_id',
   START_PROJECT = 'start_project',
   UPDATE_PROJECT_MEMBERS = 'update_project_members',
+  UPDATE_PROJECT = 'update_project',
 }
 
 export enum QueueErrors {

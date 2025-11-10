@@ -8,6 +8,7 @@ import {
   TeamMemberDto,
 } from './projects-dto/create-project.dto';
 import { StartProjectDto } from './projects-dto/start-project.dto';
+import { UpdateProjectDto } from './projects-dto/update-project.dto';
 
 @Controller('projects')
 export class ProjectsController {
@@ -55,5 +56,17 @@ export class ProjectsController {
       projectId,
       teamMembers,
     );
+  }
+
+  @MessagePattern({ cmd: ProjectsQueueEvents.UPDATE_PROJECT })
+  async update(
+    @Payload()
+    updateProjectPayload: {
+      id: number;
+      updateProjectDto: Partial<UpdateProjectDto>;
+    },
+  ) {
+    const { id, updateProjectDto } = updateProjectPayload;
+    return await this.projectsService.updateProject(id, updateProjectDto);
   }
 }
