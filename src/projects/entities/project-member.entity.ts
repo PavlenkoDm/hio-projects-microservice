@@ -60,6 +60,7 @@ export class ProjectMember {
     type: 'enum',
     enum: UserStatus,
     nullable: false,
+    default: UserStatus.PENDING,
   })
   status: UserStatus;
 
