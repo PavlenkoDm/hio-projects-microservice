@@ -132,6 +132,29 @@ export class ProjectsService {
     });
   }
 
+  async getProjects(): Promise<ProjectResponseDto[] | []> {
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        let getProjectsResponse: ProjectResponseDto[] | [];
+        const projects = await this.getProjectsWithRelations(manager);
+        if (projects.length !== 0) {
+          getProjectsResponse = projects.map((project) =>
+            this.formatProjectResponse(project),
+          );
+        } else {
+          getProjectsResponse = [];
+        }
+
+        return getProjectsResponse;
+      } catch (error) {
+        throw createRpcException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          `Get projects ERROR: ${error.message}`,
+        );
+      }
+    });
+  }
+
   async getProjectById(id: number): Promise<ProjectResponseDto> {
     return await this.dataSource.transaction(async (manager) => {
       try {
@@ -442,6 +465,14 @@ export class ProjectsService {
   ): Promise<Project> {
     return await manager.findOne(Project, {
       where: { id: projectId },
+      relations: ['members', 'languages', 'stack'],
+    });
+  }
+
+  private async getProjectsWithRelations(
+    manager: EntityManager,
+  ): Promise<Project[] | []> {
+    return await manager.find(Project, {
       relations: ['members', 'languages', 'stack'],
     });
   }

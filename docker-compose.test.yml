@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    image: nestjs-app:test
+    container_name: nestjs-app
+    restart: unless-stopped
+    ports:
+      - '3113:3000'
+    environment:
+      - NODE_ENV=development
+      - PORT=${PORT}
+      - RABBITMQ_CONNECTION_URL=${RABBITMQ_CONNECTION_URL}
+      - PG_DATABASE_CONNECTION_URL=${PG_DATABASE_CONNECTION_URL}
+      - PG_DATABASE_HOST=${PG_DATABASE_HOST}
+      - PG_DATABASE_PORT=${PG_DATABASE_PORT}
+      - PG_DATABASE_USERNAME=${PG_DATABASE_USERNAME}
+      - PG_DATABASE_PASSWORD=${PG_DATABASE_PASSWORD}
+      - PG_DATABASE_NAME=${PG_DATABASE_NAME}
+    networks:
+      - app-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    command: npm run start:dev
+
+networks:
+  app-network:
+    driver: bridge

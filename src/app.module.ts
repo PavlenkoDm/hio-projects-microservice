@@ -25,7 +25,7 @@ import { RpcValidationFilter } from './exceptions-filters/rpc-validation.filter'
         autoLoadEntities: true,
         synchronize: true,
         extra: { ssl: { rejectUnauthorized: false } },
-        logging: ['query', 'error'],
+        logging: [/*'query',*/ 'error'],
       }),
       inject: [ConfigService],
     }),
